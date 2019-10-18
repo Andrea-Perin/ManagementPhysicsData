@@ -1,0 +1,126 @@
+Questions:
+
+CAMPANA
+
+- Lifetime of an event
+- From RAW data to AOD
+- Why simulations?
+- GRID as distributed computing paradigm
+- Scientific computing, and the scope of data management
+- The need of data pools, and how to implement them
+- Name servers: role, implementations, requirements. Difference with Cloud
+- Federated namespaces
+- Efficiency and how to maximize it
+- Data distribution to improve efficiency
+- Hardware reliability: implementations
+- Tapes vs. disks
+- RAID architectures
+- Error detection vs. error correction: checksums and hashes
+- RAID 5/6 reliability
+- Arbitrary reliability with chunks
+- Chunk transfer: BitTorrent
+- Chunk size and physical blocks: how to store data+hashes
+- Availability vs reliability
+- Availability through replication, and examples
+- Reliability and availability calculations (what hypothesis?)
+- Why cryptography?
+- Symmetric vs. asymmetric
+- What does cracking mean?
+- Asymmetric encryption and confidentiality/authenticity
+- Cryptographic hash functions: requirements and features
+- Integrity and digital signature. How to verify them?
+- SSL and hybrid encryption
+- Cryptography and authentication: the need of a trusted third party
+- Describe a certificate (X.509) and its verification process
+- Authentication with certificates
+- Key hierarchy: why and how (proxies)
+- Storing of certificates and private keys
+- Revocation: why and how
+- Basic Kerberos functioning
+- Describe the Kerberos ticket and the authenticator
+- Describe the Kerberos authentication (and mutual authentication)
+- Kerberos key hierarchy
+- Authentication: OS vs. application
+- Authorization: concept and implementation
+- Authorization and identification (login vs GUID)
+- Inheritance in authorization
+- Authorization and groups; granularity
+- Accounting
+- Pros and cons of cloud storage
+- Hash tables and resizing
+- Distributed hash tables
+- Keyspace partitioning: alternatives and calculations
+- Block storage, pros and cons
+
+- IO performance, the 4 measurables
+- Caching strategies
+- Bottlenecks in IO
+- Latency compensation strategies
+
+
+CAMPESE
+
+- Why using a cluster/HPC?
+- Cons of cluster
+- Why dask
+- Dask and DAGs
+- The use of delayed() for parallelization
+- The concept of cluster and its architecture (recall: queues!)
+- submit(), map(), gather() in clusters
+- Clusters and hyperparameter optimization
+- Dask dataframe
+- Partitions, evaluating the right number
+- Dtype inference in dask dataframe: how to face eventual problems
+- Common computations and timing improvements
+- Map/Reduce framework (map_partitions)
+- Data formats
+- Persist
+- Set index, why it must be used scarcely
+- dask_ml vs. joblib in sklearn
+- impact of clustering in accuracies of ml algorithms
+- Incremental learning
+- joblib+dask: parallel backend and speed improvement
+- Transformers
+- Parallel postfit: prediction and transformation
+- Input data shape for convolutional neural networks
+
+
+LUCCHESI
+
+- Distributed computing and the power grid: common protocols
+- GRID and heterogeneous computing
+- High throughput/performance computing
+- VOs
+- Interoperability and the 5 layers in GRID
+- Resource managers, push vs. pull model
+- Data model: tapes vs. disks
+- Security, authentication/authorization
+- Cloud structure
+- Cloud services
+
+
+#############################################################
+#Campana's slides with an exclam on them are on these topics#
+#############################################################
+Name servers
+Calculations for RAID 5
+Integrity and corruptions in arbitrary reliability
+8+6 LDPC
+Symmetric encryption
+Asymmetric encryption
+What cracking means in both cases
+Cryptographic hash functions
+Integrity by digital signature
+What is a certificate
+Verifying a certificate
+Authentication with certificates
+Simplified Kerberos session
+Kerberos authentication
+Authorization
+How to identify users
+Complications in authorization
+More complications in authorization
+Accounting
+Hash table
+Distributed hash tables
+

@@ -1,0 +1,261 @@
+Exercise 1.2.1: IO or CPU bound?
+
+There are many scenarios where an application can run IO or CPU bound. A good estimator for
+IO or CPU bound is (for single threaded applications without lock contention and timers) the
+ratio of (cpu+system) over realtime. If it is close to 1 we identify an application CPU bound. E.g.
+an application with (cpu+sys)/real = 0.5 is certainly IO bound, for values over 0.9 it is most likely
+CPU bound - in particular when running inside a VM. The interpretation is that your application
+processes data faster than it can arrive from the storage devices/system.
+As a preparation create two 1 GByte files with different contents (use a blocksize of 1M):
+● create a file /var/tmp/1G.null reading zero bytes from /dev/null
+● create a file /var/tmp/1G.random reading random bytes from /dev/random
+
+
+Q1 Measure the time to compute an MD5, SHA1 and SHA256 checksum of these files twice each and categorize if the application runs in your environment CPU or IO bound.
+
+Q2 Which component on your computer is the execution time defining bottleneck?
+
+Q3 What is the checksumming bandwidth of the three algorithms?
+
+Q4 Is it sensitive to the file contents?
+
+Q5 What is the effective blocksize used by these applications?
+
+
+The commands to compute these checksums are md5sum sha1sum sha256sum and they take your file path as an argument.
+
+HINT: You can prepend the time command to measure real,cpu and system time of an application. Compute the (cpu+sys)/realtime ratio to classify your application.
+
+########################################################################################################
+
+SOLUTION:
+
+> dd if=/dev/null of=/var/tmp/1G.null bs=1M count=1000
+0+0 records in
+0+0 records out
+0 bytes copied, 0,000375348 s, 0,0 kB/s
+
+> dd if=/dev/urandom of=/var/tmp/1G.random bs=1M count=1000
+1000+0 records in
+1000+0 records out
+1048576000 bytes (1,0 GB, 1000 MiB) copied, 20,2626 s, 51,7 MB/s
+
+> time md5sum /var/tmp/1G.null 
+d41d8cd98f00b204e9800998ecf8427e  /var/tmp/1G.null
+
+real	0m0,005s
+user	0m0,001s
+sys	0m0,004s
+
+> time md5sum /var/tmp/1G.null 
+d41d8cd98f00b204e9800998ecf8427e  /var/tmp/1G.null
+
+real	0m0,004s
+user	0m0,003s
+sys	0m0,000s
+
+> time md5sum /var/tmp/1G.random 
+99c05f13fb88844ad72e565bfe308aba  /var/tmp/1G.random
+
+real	0m5,221s
+user	0m4,212s
+sys	0m0,979s
+
+> time md5sum /var/tmp/1G.random 
+99c05f13fb88844ad72e565bfe308aba  /var/tmp/1G.random
+
+real	0m5,375s
+user	0m4,327s
+sys	0m0,980s
+
+> time sha1sum /var/tmp/1G.null 
+da39a3ee5e6b4b0d3255bfef95601890afd80709  /var/tmp/1G.null
+
+real	0m0,026s
+user	0m0,001s
+sys	0m0,004s
+
+> time sha1sum /var/tmp/1G.null 
+da39a3ee5e6b4b0d3255bfef95601890afd80709  /var/tmp/1G.null
+
+real	0m0,005s
+user	0m0,003s
+sys	0m0,001s
+
+> time sha1sum /var/tmp/1G.random 
+5a1b0cb024dc24e6f1fb1f628327004ffa4e818e  /var/tmp/1G.random
+
+real	0m9,668s
+user	0m8,787s
+sys	0m0,833s
+
+> time sha1sum /var/tmp/1G.random 
+5a1b0cb024dc24e6f1fb1f628327004ffa4e818e  /var/tmp/1G.random
+
+real	0m9,786s
+user	0m8,818s
+sys	0m0,832s
+
+> time sha256sum /var/tmp/1G.null 
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /var/tmp/1G.null
+
+real	0m0,029s
+user	0m0,000s
+sys	0m0,005s
+
+> time sha256sum /var/tmp/1G.null 
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /var/tmp/1G.null
+
+real	0m0,004s
+user	0m0,004s
+sys	0m0,000s
+
+> time sha256sum /var/tmp/1G.random 
+13e670a440081d03e1b651f64bdd029f7636052c71b7afb896641ba0045a074f  /var/tmp/1G.random
+
+real	0m22,763s
+user	0m21,558s
+sys	0m1,015s
+
+> time sha256sum /var/tmp/1G.random 
+13e670a440081d03e1b651f64bdd029f7636052c71b7afb896641ba0045a074f  /var/tmp/1G.random
+
+real	0m22,723s
+user	0m21,642s
+sys	0m0,937s
+
+A1: 
+			FIRST TAKE			SECOND TAKE
+	
+		md5	sha1	sha256		md5	sha1	sha256		
+1G.null		1	0.192	0.172		0.75	0.8	1
+1G.random	0.994	0.995	0.992		0.987	0.986	0.994
+
+The application are always CPU bound except in the case of sha1 and sha256 in the first take for the 1G.null file.
+
+A2:
+
+In this computer, the bottleneck is due to the CPU.
+
+A3:
+
+Bandwidth is defined as the ratio of bits per second. Only considering the first execution for each algorithm, the bandwidths are:
+		1G.random		1G.null
+md5: 		191,5 MB/s		200 GB/s
+sha1: 		103,4 MB/s		38,5 GB/s
+sha256: 	43,9 MB/s		34,5 GB/s
+
+A4:
+
+The algorithms are sensitive to the files' contents, as is clearly shown by the huge gap in bandwidth.
+
+A5: (NOT SURE ABOUT THIS ONE. I DO NOT KNOW WHAT EFFECTIVE BLOCKSIZE IS)
+
+The effective blocksize is 160 bits for md5 and sha1, and 256 for sha256. 
+
+##################################################################################################################################
+
+Exercise 1.2.2: IO compression
+
+“gzip” is a standard compression tool to reduce storage volume of data dealing volume vs cpu
+time. The application to compress is gzip, the application to decompress is gunzip and takes
+your file path as an argument.
+
+Q1 Measure the time to compress the two files from exercise 1.1.6 and compute the
+compression bandwidth with respect to the input stream!
+
+Q2 Look at the filesize after compression. What is the compression ratio? Can you understand
+the difference?
+
+Q3 Measure the time to decompress the two files and compute the decompression bandwidth
+with respect to the input stream!
+
+Q4 Is the IO pattern of gzip gunzip independent of the file contents?
+
+HINT: After the compression the file path is appended with a .gz suffix! After decompression the
+suffix is removed!
+
+################################################
+
+SOLUTION:
+
+> dd if=/dev/zero of=/var/tmp/1G.zero bs=1M count=1000
+1000+0 records in
+1000+0 records out
+1048576000 bytes (1,0 GB, 1000 MiB) copied, 8,95552 s, 117 MB/s
+
+> dd if=/dev/urandom of=/var/tmp/1G.rand bs=1M count=1000
+1000+0 records in
+1000+0 records out
+1048576000 bytes (1,0 GB, 1000 MiB) copied, 21,1061 s, 49,7 MB/s
+
+> time gzip /var/tmp/1G.zero 
+
+real	0m27,645s
+user	0m21,898s
+sys	0m2,896s
+
+> time gzip /var/tmp/1G.rand 
+
+real	2m48,007s
+user	2m16,821s
+sys	0m11,143s
+
+> ls -lh /var/tmp/
+total 2,0G
+-rw-rw-r-- 1 andrea andrea     0 lug  6 18:59 1G.null
+-rw-rw-r-- 1 andrea andrea 1001M lug  6 19:01 1G.rand.gz
+-rw-rw-r-- 1 andrea andrea 1000M lug  6 19:00 1G.random
+-rw-rw-r-- 1 andrea andrea  994K lug  6 19:01 1G.zero.gz
+
+> time gunzip /var/tmp/1G.zero.gz
+
+real	0m18,979s
+user	0m13,358s
+sys	0m5,124s
+
+> time gunzip /var/tmp/1G.rand.gz
+
+real	0m50,718s
+user	0m16,513s
+sys	0m8,622s
+
+
+
+
+
+A1:
+
+The two bandwidths of the zipping procedure are:
+- 1G.zero: 36.2 MB/s
+- 1G.rand: 5,95 MB/s
+Obviously, performance is dependent on the file itself.
+
+A2:
+
+The compression rate is
+- 1G.zero: from 1G to 994k, so the ratio is 0,000994
+- 1G.rand: from 1G to 1001M, so the ratio is 1,001
+The difference is that it is easy to compress a file that is made only of 0s. The overhead that comes from the zipping procedure is not determinant. Instead, in the case of the 1G.rand file there is no good way of performing compression. The file is random, so what happens is that the overhead coming from the zipping makes the outcome worse.
+
+A3:
+
+The decompression rate is:
+- 1G.zero: 52,7 MB/s
+- 1G.random: 19,7 MB/s
+
+A4:
+
+The bandwidths of both gzip and gunzip strongly depend on the contents of the files. The homogenous files are more quickly processed.
+
+
+
+
+
+
+
+
+
+
+
+

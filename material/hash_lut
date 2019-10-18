@@ -1,0 +1,421 @@
+> ssh aperin@gate.cloudveneto.it
+
+> ssh root@10.67.22.14
+
+> cd /tmp/
+
+download redis, a tool for hash tables
+
+> wget http://download.redis.io/releases/redis-5.0.5.tar.gz
+
+print what is inside the folder
+
+> ls -latr
+
+there is a file we must unzip and un-tar
+
+> gunzip redis.5.0.5.tar.gz
+
+> ls -latr
+
+the file is still a tar format; this means that it is a Tape ARchive (file format used to store on tape and other mass memories)
+
+> tar -xvf redis-5.0.5.tar
+
+x=extract, v=verbose, f=giving the name of the file to untar (untar=unpack)
+Inside the folder 'redis' there is a README.md
+iniside it, there is an explanation about redis itself, together with a set of instructions
+we now have to compile the package by using the 'make' command
+
+> cd redis-5.0.5
+
+> cat README.md
+
+> make
+
+inside the folder redis-5.0.5; this command compiles
+when we run 'make' inside a directory, the command looks for every '*.c' file and compiles it
+
+> ls
+
+> less Makefile
+
+> cd src
+
+> ./redis-server &
+
+> ./redis-cli
+
+now, the IP of the server: 127.0.0.1:<some port>
+this is the localhost IP
+The server is now running. Now, we will start working as Clients.
+
+> quit
+
+##########################
+if you want to login as andreperin
+
+> exit
+> ssh andreaperin@10.67.22.14
+##########################
+
+> su andreaperin
+
+> cd
+
+> /tmp/redis-5.0.5/src/redis-cli
+
+it will now work as before, even if we are not root anymore
+
+> quit
+quit
+> ls
+
+this works
+
+> redis-cli
+
+this does not work outside its directory
+we must use an env variable
+
+> export PATH=/tmp/redis-5.0.5/src:$PATH
+
+> redis-cli
+
+it now works
+
+> echo $PATH
+
+this will just print "$PATH"
+
+> quit
+
+> echo $PATH
+
+this returns a list of places where the OS looks for the command; when it is found, it is run
+Commands can be built, as a command is actually an executable file (that can be a C implementation)
+therefore, commands are executables, and each time we run them, UNIX looks for the file and runs it
+IMPORTANT: if two commands have the same name, UNIX just run of them. It scroll through the list of paths and the first time it finds the wanted command, it runs it
+only the first one encountered is found! if we want to overwrite a command, we must append the path where our implementation is TO THE LEFT!
+
+Now go to the exercise at the link https://apeters.web.cern.ch/apeters/csc2018/cloud/hashtable.html#
+
+> wget https://apeters.web.cern.ch/apeters/csc2018/_downloads/4eea42a0909a188c81ba98ae00d64083/cloud.sh
+
+> less cloud.sh
+
+'less' is nice: it prints the contents and allows for up and down browsing using the arrows
+we have to edit this file, using some editor of our choice. For instance,
+
+> vi cloud.sh
+
+> source cloud.sh
+
+this takes every executable in cloud.sh and translates it into the OS environment
+
+> ./cloud.sh
+
+permission denied!
+
+> ls -l cloud.sh
+
+-rw-r--r-- 1 root root 10572 Oct 10  2018 cloud.sh
+
+No 'x' permission for anyone 
+now let us move on with the exercise: implementing a cloud server.
+Let us define 8 DataBases (DB) -> an 8 disks system, each identified by a number from 1 to 8
+
+Hash Key 	Hash Value 	KV Server Host 	Port 	DB
+0,1 		1 		localhost 	6379 	1
+2,3 		2 		localhost 	6379 	2
+4,5 		3 		localhost 	6379 	3
+6,7 		4 		localhost 	6379 	4
+8,9 		5 		localhost 	6379 	5
+10,11 		6 		localhost 	6379 	6
+12,13 		7 		localhost 	6379 	7
+14,15 		8 		localhost 	6379 	8
+
+we now must define a hash function, in our case SHA-1.
+
+> sha1string /etc/passwd
+
+this computes the SHA1 value of the string '/etc/passwd' (NOT INSIDE THE DIRECTORY)
+
+63ce9c1433c0fad87dcc9d5d22081acc7ff60df4
+
+Noice
+What if we want to save the oputput of a hash function to a variable?
+
+> hash=`sha1string /etc/passwd`
+
+NOTICE THE BACKTICKS! Inside them there is a command
+
+> echo $hash
+
+we now want to take the first char
+#
+UNIX magic: 'echo $hash' returns the whole stuff
+the same happens if we type 'echo ${hash}'
+HOWEVER: 'echo ${hash:3:5}' means that we want the portion of string starting from 3 and of length 5
+3: offset
+5: length
+#
+
+> echo ${hash:3:5}
+
+so if we want the first char of the hash, we need to type
+
+> echo ${hash:0:1}
+
+saving it into a variable named 'hashkey'
+
+> hashkey=`echo ${hash:0:1}`
+
+Nice, but hashkey=6, so we need to convert it into an octal representation (for the hashkeys)
+to do so, we use the function h8d
+
+> h8d $hashkey
+
+SOMETHING USEFUL: use 'sed' when in need of manipulation of strings
+
+we now upload the file /etc/resolv.conf in the system
+
+> filename="/etc/resolv.conf"
+> hash=`sha1string $filename`
+> hashkey=`echo ${hash:0:1}`
+> index=`h8d $hashkey`
+> upload $filename $index $filename
+
+if this worked, an 'OK' should be printed
+IMPORTANT: redis-cli must be 'exported', otherwise this won't work
+redis-cli is reset each time we make a new login -> bash.rc must be edited if we want a permanent addition of the path
+
+> download $index $filename /tmp/resolv.conf.downloaded
+
+> diff /tmp/resolv.conf.downloaded /etc/resolv.conf
+
+this command should output no result if the two files are identical. Otherwise, it should output the places where the two files are different. To test this, just do 
+
+> vi /tmp/resolv.conf.downloaded
+
+and edit from there. Then quit
+
+IMPORTANT: only one possible download with a given name for a single machine. Permission is denied to whoever tries downloading the file after the first one has been downloaded. To avoid this, just add a small specification (if it is deemed necessary)
+
+> list 3
+
+this outputs all the contents of server 3.
+How can we remove an uploaded file? Just juse the function 'delete'
+
+> list $index
+> delete $index /etc/resolv.conf
+
+We can upload a file, download a file, remove a file, listing all the files.
+Something more high level: a function to upload a list of files
+
+> wget https://apeters.web.cern.ch/apeters/csc2018/_downloads/3a9788b203f55cf8b78398bebbe880c3/pictures.tgz
+
+> ls -latr
+
+what is a tgz file? it is a file that is both comopressed and tarred.
+
+> tar -xvzf pictures.tgz
+
+x=extract, v=verbose, z=the file is to unzip, f=the file name is given
+
+> ls -latr
+
+a new directory 'pictures' has been created.
+
+> cd pictures
+
+> ls -latr
+
+all the pictures are listed.
+
+> ls pictures | wc -l
+
+this counts the number of pictures inside the directory: there are 128 of them.
+
+> find pictures -type f
+
+this searches files of generic (the meaning of 'f') type inside 'pictures'
+if 'find pictures -type b' were to be typed, no files would be returned, as 'b' means 'binary' 
+
+Now, for some nice loops in bash:
+
+> for name in `find pictures -type f`; do echo "my file is $name"; done
+
+this searches in 'pictures' all the files (since 'f'). It loops over all the 'name' in the list of names returned by `find pictures -type f` (which is formatted as a column of names, conveniently). Then. for each of them, it just prints (because there is the 'echo' command) "my file is ..."
+
+Alternative syntax (not in line):
+
+> for name in `find pictures -type f`
+> do echo "my file is $name"
+> done
+
+the semicolon is just a portmanteau for newline
+We can now implement a cloud_upload function: just modifying the one in cloud.sh
+
+After modification, we must run 'source' once again. If an error at line x, type 'vi +<line number> cloud.sh'
+Then, use a for loop with cloud_upload:
+
+> for name in `find pictures -type f`
+> do cloud_upload $name $name
+> done
+
+An interesting question is: how were the files spread amongst the various disks?
+
+> for name in 1 2 3 4 5 6 7 8
+> do list $name | wc -l
+> done
+
+recall that 'wc' is a word count function. The set '1 2 3 4 5 6 7 8' is seen as a list, that is run over by 'name'.
+The distribution is somewhat uniform.
+How can we list files in a more intelligent way?
+We can modify the function 'cloud_ls'
+
+> vi cloud.sh
+
+edit what has to be edited: in the end, yu should have
+
+###################################################################################
+# ------------------------------------------------------------------------------
+# cloud_ls        : list files on the cloud storage
+# args: <none>
+# ------------------------------------------------------------------------------
+function cloud_ls() {
+        tmpfile="/tmp/.cloud_ls.$RANDOM"
+        for name in 1 2 3 4 5 6 7 8; do
+                list $name >> $tmpfile
+        done
+        sort $tmpfile
+        unlink $tmpfile
+}
+###################################################################################
+
+> source cloud.sh
+
+> cloud_ls | wc -l
+
+Noice. However it takes a lot of time!
+
+> time cloud_ls | wc -l
+128
+
+real	0m0.089s
+user	0m0.028s
+sys	0m0.080s
+
+
+These are times for a very small system. Imagine scaling these times for million of entries... It may take entire minutes just for a simple listing. 
+
+BUCKET: listing is restricted to smaller subsets, called buckets. A listing involves only a single bucket.
+
+Let us implement such a system.
+
+> wget https://apeters.web.cern.ch/apeters/csc2018/_downloads/de5792e3bdec6634fbdbdb0b943e810d/cloudset.sh
+
+cloudset gives us even more functions towards string manipulation.
+We can 'embed' cloudset in cloud.sh by adding the string '. cloudset.sh' just after the initial comments
+After it's done, recompile.
+
+> source cloud.sh
+
+Now, let us edit once again 'cloud_upload()'.
+
+> vi cloud.sh
+
+in the end, you should have 
+
+###################################################################################
+# ------------------------------------------------------------------------------
+# cloud_upload    : upload a file to the cloud storage
+# ------------------------------------------------------------------------------
+# args: <source file> <cloud file>
+# <source file>   : source file name to upload
+# <cloud file>    : file name in the cloud system 
+# return 0 if success
+
+bucketname="$USER"
+buckethash=`sha1string $bucketname`
+buckethashkey=${buckethash:0:1}
+bucketindex=`h8d $buckethashkey`
+
+function cloud_upload() {
+        #checking if the file exists
+        if [ ! -f "$1" ] ; then
+                echo "error: source file <$1> does not exist!";
+                return 1;
+        fi
+
+        hash=`sha1string $2`;
+        hashkey=`echo ${hash:0:1}`;
+        hashvalue=`h8d $hashkey`;
+        echo "==> Uploading $1 with hash $hash to DHT location $hashvalue"
+        upload $1 $hashvalue $2
+        set_add $bucketindex $bucketname $2 #adding bucket information to the uploaded file's name
+}
+
+###################################################################################
+
+> source cloud.sh
+
+Now compare the performance of 'cloud_ls' and 'set_ls':
+
+> time cloud_ls | wc -l
+128
+
+real	0m0.081s
+user	0m0.026s
+sys	0m0.075s
+
+> time set_ls $bucketindex $bucketname | wc -l | sort
+128
+
+real	0m0.016s
+user	0m0.004s
+sys	0m0.015s
+
+Using a bucket system makes the matter significantly faster! ~5 times improvement with a simple mod.
+
+Now, to kill a server: from root, 
+
+> jobs
+
+If not root,
+
+> ps -elf | grep redis
+
+two jobs: one is the command grep itself, the other is the server. Then,
+
+> kill -9 <process id>
+
+The process ID is the 3rd number. In the current case,
+
+> kill -9 17093
+
+> ps -elf | grep redis
+
+The server should now be dead.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
